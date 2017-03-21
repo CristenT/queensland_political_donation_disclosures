@@ -1,24 +1,24 @@
-# This is a template for a Python scraper on morph.io (https://morph.io)
-# including some code snippets below that you should find helpful
+import csv
+import requests
+from BeautifulSoup import BeautifulSoup
 
-# import scraperwiki
-# import lxml.html
-#
-# # Read in a page
-# html = scraperwiki.scrape("http://foo.com")
-#
-# # Find something on the page using css selectors
-# root = lxml.html.fromstring(html)
-# root.cssselect("div[align='left']")
-#
-# # Write out to the sqlite database using scraperwiki library
-# scraperwiki.sqlite.save(unique_keys=['name'], data={"name": "susan", "occupation": "software developer"})
-#
-# # An arbitrary query against the database
-# scraperwiki.sql.select("* from data where 'name'='peter'")
+url = 'https://disclosures.ecq.qld.gov.au/Map'
+response = requests.get(url)
+html = response.content
 
-# You don't have to do things with the ScraperWiki and lxml libraries.
-# You can use whatever libraries you want: https://morph.io/documentation/python
-# All that matters is that your final data is written to an SQLite database
-# called "data.sqlite" in the current working directory which has at least a table
-# called "data".
+soup = BeautifulSoup (html)
+table = soup.find('tbody', attrs={'class': 'stripe'})
+
+list_of_rows = []
+for row in table.findAll('tr')[1:]:
+    list_of_cells = []
+    for cell in row.findAll('td'):
+        text = cell.text.replace('&nbsp;', '')
+        list_of_cells.append(text)
+    list_of_rows.append(list_of_cells)
+
+
+outfile = open("./donations.csv", "wb")
+writer = csv.writer(outfile)
+writer.writerow(["Donor", "Recipient", "Date of gift", "Donor electorate", "Donor address", "Gift value"])
+writer.writerows(list_of_rows)
